@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
+#include <unistd.h>
 
 // to be in arguments
-int gridSize = 30;
-int nIterations = 10;
-int nThreads = 2;
+int gridSize = 20;
+int nIterations = 500;
+int nThreads = 1;
 
 int **currentgrid;
 int **futuregrid;
@@ -15,6 +16,7 @@ pthread_mutex_t index_mutex;
 
 int getNeighbours(int row, int col){
     int count = 0;
+    //printf("(%d, %d)\n", row, col);
 
     for (int i = row-1 ; i <= row+1 ; i++){
         for (int j = col-1 ; j <= col+1 ; j++){
@@ -28,8 +30,9 @@ int getNeighbours(int row, int col){
             }
         }
     }
-
-    count = count - 1; // because it counts itself as a neighbour
+    if(currentgrid[row][col] == 1){
+        count = count - 1; // because it counts itself as a neighbour
+    }
     return count;
 }
 
@@ -69,11 +72,11 @@ void* updateGrid()
         y = 0;
         pthread_mutex_unlock(&index_mutex);
     }
+
+    return NULL;
 }
 
 int main(int arg, char **args){
-    x = 0;
-    y = 0;
 
     //allocate grids
     currentgrid = calloc(gridSize, sizeof(int *));
@@ -101,14 +104,17 @@ int main(int arg, char **args){
     }
     printf("\n--------------------\n");
 
+    // declare the threads
+    pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
+
     // do the iterations
     for (int k = 0 ; k < nIterations ; k++){
+        x = 0;
+        y = 0;
 
-        // declare the threads
-        pthread_t *threads = malloc(nThreads * sizeof(pthread_t));
-
+        // create threads
         for(int i = 0 ; i < nThreads ; i++){
-            pthread_create(&threads[i], NULL, updateGrid, NULL);
+            int test = pthread_create(&threads[i], NULL, updateGrid, NULL);
         }
 
         // join threads
@@ -126,13 +132,20 @@ int main(int arg, char **args){
         //print the board
         for(int i = 0 ; i < gridSize ; i++){
             for (int j = 0 ; j < gridSize ; j++){
-                printf("%d ", currentgrid[i][j]);
+                if(currentgrid[i][j] == 1)
+                    printf("%d ", currentgrid[i][j]);
+                else
+                    printf(". ");
             }
             printf("\n");
         }
-        printf("\n--------------------\n");
+        //printf("\n--------------------\n");
+        sleep(1);
+        system("clear");
+
     }
 
+    free(threads);
 
     // FREEDOM FOR THE GRIDS
     for (int i = 0 ; i<gridSize ; i++){
