@@ -7,14 +7,13 @@
 
 // to be in arguments
 int gridSize = 50;
-int nIterations = 10000;
-int nThreads = 10;
+int nIterations = 100;
+int nThreads = 2;
 
 int **currentgrid;
 int **futuregrid;
 int x, y;
-pthread_mutex_t x_mutex;
-pthread_mutex_t y_mutex;
+pthread_mutex_t mutex;
 
 int getNeighbours(int row, int col){
     int count = 0;
@@ -95,32 +94,12 @@ void* updateGrid()
     bool end = false;
 
     while(end == false){
-        pthread_mutex_lock(&x_mutex);
+        pthread_mutex_lock(&mutex);
         end = getWork(&currentX, &currentY);
-        pthread_mutex_unlock(&x_mutex);
+        pthread_mutex_unlock(&mutex);
         if (end == false)
             updateCell(currentX, currentY);
     }
-
-
-    // int currentY = y, currentX = x;
-    //
-    // while (currentX < gridSize){ // rows
-    //     while (currentY < gridSize){ // columns
-    //         pthread_mutex_lock(&y_mutex);
-    //         currentY = y;
-    //         y++;
-    //         pthread_mutex_unlock(&y_mutex);
-    //         if (x < gridSize && y < gridSize){
-    //             updateCell(currentX, currentY);
-    //         }
-    //     }
-    //     pthread_mutex_lock(&x_mutex);
-    //     x++;
-    //     currentX = x;
-    //     y = 0;
-    //     pthread_mutex_unlock(&x_mutex);
-    // }
 
     return NULL;
 }
@@ -170,7 +149,6 @@ int main(int arg, char **args){
         for (int i = 0 ; i < nThreads ; i++){
             pthread_join(threads[i], NULL);
         }
-        //sleep(1);
 
         //set current grid to next values
         for(int i = 0 ; i < gridSize ; i++){
@@ -183,13 +161,13 @@ int main(int arg, char **args){
         for(int i = 0 ; i < gridSize ; i++){
             for (int j = 0 ; j < gridSize ; j++){
                 if(currentgrid[i][j] == 1)
-                    printf("%d ", currentgrid[i][j]);
+                    printf("O ");
                 else
                     printf(". ");
             }
             printf("\n");
         }
-    //    printf("\n--------------------\n");
+        printf("\n--------------------\n");
 
     }
 

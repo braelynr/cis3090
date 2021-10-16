@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 // to be in arguments
-int gridSize = 30;
-int nIterations = 10;
+int gridSize = 50;
+int nIterations = 100;
 
 int **currentgrid;
 int **futuregrid;
@@ -25,7 +26,8 @@ int getNeighbours(int row, int col){
         }
     }
 
-    count = count - 1; // because it counts itself as a neighbour
+    if (currentgrid[row][col] == 1)
+        count = count - 1; // because it counts itself as a neighbour
     return count;
 }
 
@@ -56,7 +58,7 @@ int main(){
         }
         printf("\n");
     }
-    printf("\n--------------------\n");
+    //printf("\n--------------------\n");
 
     // do the iterations
     for (int k = 0 ; k < nIterations ; k++){
@@ -92,15 +94,21 @@ int main(){
                 currentgrid[i][j] = futuregrid[i][j];
             }
         }
+        usleep(500000);
+        system("clear");
+
 
         //print the board
         for(int i = 0 ; i < gridSize ; i++){
             for (int j = 0 ; j < gridSize ; j++){
-                printf("%d ", currentgrid[i][j]);
+                if(currentgrid[i][j] == 1)
+                    printf("O ");
+                else
+                    printf(". ");
             }
             printf("\n");
         }
-        printf("\n--------------------\n");
+    //    printf("\n--------------------\n");
     }
 
 
