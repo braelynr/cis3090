@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 // to be in arguments
@@ -12,7 +13,8 @@ int nThreads = 10;
 int **currentgrid;
 int **futuregrid;
 int x, y;
-pthread_mutex_t index_mutex;
+pthread_mutex_t x_mutex;
+pthread_mutex_t y_mutex;
 
 int getNeighbours(int row, int col){
     int count = 0;
@@ -38,6 +40,7 @@ int getNeighbours(int row, int col){
 
 void updateCell(int i, int j){
     int numNeighbours = getNeighbours(i, j);
+    //printf("(%d,%d)\n", i, j);
 
     if (currentgrid[i][j] == 0 && numNeighbours == 3){ // a dead cell to be reborn
         futuregrid[i][j] = 1;
@@ -58,26 +61,66 @@ void updateCell(int i, int j){
     }
 }
 
+bool getWork(int *i, int *j){
+    if (x < gridSize){
+        if (y < gridSize){
+            *i = x;
+            *j = y;
+
+            y++;
+            return false;
+        }
+        else if (y >= gridSize && x < gridSize - 1){
+            y = 0;
+            x++;
+            *i = x;
+            *j = y;
+            y++;
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+    else{
+        return true;
+    }
+}
+
+
 void* updateGrid()
 {
-    int currentY = 0, currentX = 0;
+    int currentX = 0;
+    int currentY = 0;
+    bool end = false;
 
-    while (x < gridSize){ // rows
-        while (y < gridSize){ // columns
-            pthread_mutex_lock(&index_mutex);
-            currentY = y;
-            y++;
-            pthread_mutex_unlock(&index_mutex);
-            if (x < gridSize && y < gridSize){
-                updateCell(currentX, currentY);
-            }
-        }
-        pthread_mutex_lock(&index_mutex);
-        x++;
-        currentX = x;
-        y = 0;
-        pthread_mutex_unlock(&index_mutex);
+    while(end == false){
+        pthread_mutex_lock(&x_mutex);
+        end = getWork(&currentX, &currentY);
+        pthread_mutex_unlock(&x_mutex);
+        if (end == false)
+            updateCell(currentX, currentY);
     }
+
+
+    // int currentY = y, currentX = x;
+    //
+    // while (currentX < gridSize){ // rows
+    //     while (currentY < gridSize){ // columns
+    //         pthread_mutex_lock(&y_mutex);
+    //         currentY = y;
+    //         y++;
+    //         pthread_mutex_unlock(&y_mutex);
+    //         if (x < gridSize && y < gridSize){
+    //             updateCell(currentX, currentY);
+    //         }
+    //     }
+    //     pthread_mutex_lock(&x_mutex);
+    //     x++;
+    //     currentX = x;
+    //     y = 0;
+    //     pthread_mutex_unlock(&x_mutex);
+    // }
 
     return NULL;
 }
@@ -137,16 +180,16 @@ int main(int arg, char **args){
         }
 
         //print the board
-        // for(int i = 0 ; i < gridSize ; i++){
-        //     for (int j = 0 ; j < gridSize ; j++){
-        //         if(currentgrid[i][j] == 1)
-        //             printf("%d ", currentgrid[i][j]);
-        //         else
-        //             printf(". ");
-        //     }
-        //     printf("\n");
-        // }
-        // printf("\n--------------------\n");
+        for(int i = 0 ; i < gridSize ; i++){
+            for (int j = 0 ; j < gridSize ; j++){
+                if(currentgrid[i][j] == 1)
+                    printf("%d ", currentgrid[i][j]);
+                else
+                    printf(". ");
+            }
+            printf("\n");
+        }
+    //    printf("\n--------------------\n");
 
     }
 
