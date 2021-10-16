@@ -5,9 +5,9 @@
 #include <unistd.h>
 
 // to be in arguments
-int gridSize = 20;
-int nIterations = 500;
-int nThreads = 1;
+int gridSize = 50;
+int nIterations = 10000;
+int nThreads = 10;
 
 int **currentgrid;
 int **futuregrid;
@@ -60,15 +60,21 @@ void updateCell(int i, int j){
 
 void* updateGrid()
 {
+    int currentY = 0, currentX = 0;
+
     while (x < gridSize){ // rows
         while (y < gridSize){ // columns
             pthread_mutex_lock(&index_mutex);
+            currentY = y;
             y++;
             pthread_mutex_unlock(&index_mutex);
-            updateCell(x, y-1);
+            if (x < gridSize && y < gridSize){
+                updateCell(currentX, currentY);
+            }
         }
         pthread_mutex_lock(&index_mutex);
         x++;
+        currentX = x;
         y = 0;
         pthread_mutex_unlock(&index_mutex);
     }
@@ -114,13 +120,14 @@ int main(int arg, char **args){
 
         // create threads
         for(int i = 0 ; i < nThreads ; i++){
-            int test = pthread_create(&threads[i], NULL, updateGrid, NULL);
+            pthread_create(&threads[i], NULL, updateGrid, NULL);
         }
 
         // join threads
         for (int i = 0 ; i < nThreads ; i++){
             pthread_join(threads[i], NULL);
         }
+        //sleep(1);
 
         //set current grid to next values
         for(int i = 0 ; i < gridSize ; i++){
@@ -130,18 +137,16 @@ int main(int arg, char **args){
         }
 
         //print the board
-        for(int i = 0 ; i < gridSize ; i++){
-            for (int j = 0 ; j < gridSize ; j++){
-                if(currentgrid[i][j] == 1)
-                    printf("%d ", currentgrid[i][j]);
-                else
-                    printf(". ");
-            }
-            printf("\n");
-        }
-        //printf("\n--------------------\n");
-        sleep(1);
-        system("clear");
+        // for(int i = 0 ; i < gridSize ; i++){
+        //     for (int j = 0 ; j < gridSize ; j++){
+        //         if(currentgrid[i][j] == 1)
+        //             printf("%d ", currentgrid[i][j]);
+        //         else
+        //             printf(". ");
+        //     }
+        //     printf("\n");
+        // }
+        // printf("\n--------------------\n");
 
     }
 
