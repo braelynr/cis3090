@@ -6,9 +6,9 @@
 #include <unistd.h>
 
 // to be in arguments
-int gridSize = 50;
-int nIterations = 100;
-int nThreads = 2;
+int gridSize;
+int nIterations;
+int nThreads;
 
 int **currentgrid;
 int **futuregrid;
@@ -104,7 +104,54 @@ void* updateGrid()
     return NULL;
 }
 
-int main(int arg, char **args){
+void printGrid(){
+    //print the board
+    for(int i = 0 ; i < gridSize ; i++){
+        for (int j = 0 ; j < gridSize ; j++){
+            if(currentgrid[i][j] == 1)
+                printf("O ");
+            else
+                printf(". ");
+        }
+        printf("\n");
+    }
+    printf("\n--------------------\n");
+}
+
+int main(int argc, char **argv){
+    int print = 0; // assume false unless specified in commandline
+    gridSize = 0;
+    nIterations = 0;
+    nThreads = 0;
+
+    if(argc < 4 || argc > 5){ // too few or too many arguments
+        printf("Usage: gol_data nThreads gridSize nInterations [-d]\n");
+        return -1;
+    }
+    else{
+        nThreads = atoi(argv[1]);
+        gridSize = atoi(argv[2]);
+        nIterations = atoi(argv[3]);
+        if(argc == 5){
+            print = 1;
+        }
+        if(nThreads == 0)
+        {
+            printf("Invalid Arguments: nThreads must be an integer greater than or equal to 1\n");
+            printf("Usage: gol_data nThreads gridSize nInterations [-d]\n");
+            return -1;
+        }
+        else if(gridSize == 0){
+            printf("Invalid Arguments: gridSize must be an integer greater than or equal to 1\n");
+            printf("Usage: gol_data nThreads gridSize nInterations [-d]\n");
+            return -1;
+        }
+        else if(nIterations == 0){
+            printf("Invalid Arguments: nIterations must be an integer greater than or equal to 1\n");
+            printf("Usage: gol_data nThreads gridSize nInterations [-d]\n");
+            return -1;
+        }
+    }
 
     pthread_mutex_init(&mutex, NULL);
 
@@ -126,13 +173,9 @@ int main(int arg, char **args){
         }
     }
     //print the board
-    for(int i = 0 ; i < gridSize ; i++){
-        for (int j = 0 ; j < gridSize ; j++){
-            printf("%d ", currentgrid[i][j]);
-        }
-        printf("\n");
+    if(print == 1){
+        printGrid();
     }
-    printf("\n--------------------\n");
 
     // declare the threads
     pthread_t *threads = calloc(nThreads, sizeof(pthread_t));
@@ -160,16 +203,9 @@ int main(int arg, char **args){
         }
 
         //print the board
-        for(int i = 0 ; i < gridSize ; i++){
-            for (int j = 0 ; j < gridSize ; j++){
-                if(currentgrid[i][j] == 1)
-                    printf("O ");
-                else
-                    printf(". ");
-            }
-            printf("\n");
+        if(print == 1){
+            printGrid();
         }
-        printf("\n--------------------\n");
 
     }
 
