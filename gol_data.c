@@ -3,7 +3,6 @@
 #include <time.h>
 #include <pthread.h>
 #include <stdbool.h>
-#include <unistd.h>
 
 // to be in arguments
 int gridSize;
