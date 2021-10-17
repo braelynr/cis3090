@@ -148,6 +148,7 @@ void* populateQueues(){
         }
     }
     doneWork = 1;
+    return NULL;
 }
 
 void* fillLiving(){
@@ -174,6 +175,8 @@ void* fillLiving(){
         }
     }
     free(toUpdate);
+
+    return NULL;
 }
 
 void* fillDead(){
@@ -197,6 +200,8 @@ void* fillDead(){
         }
     }
     free(toUpdate);
+
+    return NULL;
 }
 
 void printGrid(){
