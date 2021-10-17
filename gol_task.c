@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include <unistd.h>
 
 // to be in arguments
@@ -11,7 +10,6 @@ int nIterations;
 
 int **currentgrid;
 int **futuregrid;
-pthread_mutex_t futuregrid_mutex;
 int doneWork;
 
 //****************************** queue stuff ******************************
@@ -65,7 +63,6 @@ void addNode(Queue* q, int row, int col)
     }
     //Release lock
     pthread_mutex_unlock(&q->mutex);
-    //sleep(5); //why?
 }
 //pull (remove) from the queue
 int removeNode(Queue* q, Cell* cell_out)
@@ -159,14 +156,13 @@ void* fillLiving(){
     while (done == 0){ // how to implement so queues dont leave until board is actually filled?
         success = removeNode(livingCells, toUpdate);
         if(success == 1){
-            pthread_mutex_lock(&futuregrid_mutex);
             futuregrid[toUpdate->row][toUpdate->col] = 1;
-            pthread_mutex_unlock(&futuregrid_mutex);
         }
-        else{
+        else{ // the queue is empty
             // check if we are done completely
             if (doneWork == 0){
                 // we're not done wait for more to queue
+                sleep(0); // give up cpu to other threads
             }
             else{
                 done = 1; // queue is empty and will not be filled with anything else
@@ -185,14 +181,13 @@ void* fillDead(){
 
     while (done == 0){ // how to implement so queues dont leave until board is actually filled?
         if(removeNode(deadCells, toUpdate) == 1){
-            pthread_mutex_lock(&futuregrid_mutex);
             futuregrid[toUpdate->row][toUpdate->col] = 0;
-            pthread_mutex_unlock(&futuregrid_mutex);
         }
         else{
             // check if we are done completely
             if (doneWork == 0){
                 // we're not done wait for more to queue
+                sleep(0); // give up cpu to other threads
             }
             else{
                 done = 1; // queue is empty and will not be filled with anything else
@@ -247,12 +242,8 @@ int main(int argc, char **argv){
         }
     }
 
-    // signals for the queues to wait on eachother
-    doneWork = 0;
-
     livingCells = createQueue();
     deadCells = createQueue();
-    pthread_mutex_init(&futuregrid_mutex, NULL);
 
     //allocate grids
     currentgrid = calloc(gridSize, sizeof(int *));
@@ -283,18 +274,16 @@ int main(int argc, char **argv){
     // // do the iterations
     for (int k = 0 ; k < nIterations ; k++){
 
+        // signals for the queues to wait on eachother
+        doneWork = 0;
+
         pthread_create(&queueFiller, NULL, populateQueues, NULL);
         pthread_create(&liveReader, NULL, fillLiving, NULL);
         pthread_create(&deadReader, NULL, fillDead, NULL);
 
-    // so we need some barriers
-
         pthread_join(queueFiller, NULL);
-
         pthread_join(liveReader, NULL);
-
         pthread_join(deadReader, NULL);
-
 
         //set current grid to next values
         for(int i = 0 ; i < gridSize ; i++){
