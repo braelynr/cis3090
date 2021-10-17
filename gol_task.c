@@ -6,8 +6,8 @@
 #include <unistd.h>
 
 // to be in arguments
-int gridSize = 10;
-int nIterations = 10;
+int gridSize;
+int nIterations;
 
 int **currentgrid;
 int **futuregrid;
@@ -199,7 +199,48 @@ void* fillDead(){
     free(toUpdate);
 }
 
-int main(int arg, char **args){
+void printGrid(){
+    //print the board
+    for(int i = 0 ; i < gridSize ; i++){
+        for (int j = 0 ; j < gridSize ; j++){
+            if(currentgrid[i][j] == 1)
+                printf("O ");
+            else
+                printf(". ");
+        }
+        printf("\n");
+    }
+    printf("\n--------------------\n");
+}
+
+
+int main(int argc, char **argv){
+
+    int print = 0; // assume false unless specified in commandline
+    gridSize = 0;
+    nIterations = 0;
+
+    if(argc < 3 || argc > 4){ // too few or too many arguments
+        printf("Usage: gol_task gridSize nInterations [-d]\n");
+        return -1;
+    }
+    else{
+        gridSize = atoi(argv[1]);
+        nIterations = atoi(argv[2]);
+        if(argc == 4){
+            print = 1;
+        }
+        else if(gridSize == 0){
+            printf("Invalid Arguments: gridSize must be an integer greater than or equal to 1\n");
+            printf("Usage: gol_task gridSize nInterations [-d]\n");
+            return -1;
+        }
+        else if(nIterations == 0){
+            printf("Invalid Arguments: nIterations must be an integer greater than or equal to 1\n");
+            printf("Usage: gol_task gridSize nInterations [-d]\n");
+            return -1;
+        }
+    }
 
     // signals for the queues to wait on eachother
     doneWork = 0;
@@ -226,13 +267,9 @@ int main(int arg, char **args){
         }
     }
     //print the board
-    for(int i = 0 ; i < gridSize ; i++){
-        for (int j = 0 ; j < gridSize ; j++){
-            printf("%d ", currentgrid[i][j]);
-        }
-        printf("\n");
+    if(print == 1){
+        printGrid();
     }
-    printf("\n--------------------\n");
 
     pthread_t queueFiller;
     pthread_t liveReader;
@@ -262,16 +299,9 @@ int main(int arg, char **args){
         }
 
         //print the board
-        for(int i = 0 ; i < gridSize ; i++){
-            for (int j = 0 ; j < gridSize ; j++){
-                if(currentgrid[i][j] == 1)
-                    printf("O ");
-                else
-                    printf(". ");
-            }
-            printf("\n");
+        if(print == 1){
+            printGrid();
         }
-        printf("\n--------------------\n");
 
     }
 
