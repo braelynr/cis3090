@@ -106,6 +106,8 @@ void* updateGrid()
 
 int main(int arg, char **args){
 
+    pthread_mutex_init(&mutex, NULL);
+
     //allocate grids
     currentgrid = calloc(gridSize, sizeof(int *));
     for (int i = 0 ; i<gridSize ; i++){
