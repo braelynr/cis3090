@@ -21,20 +21,31 @@ char *shuffleDictionary(char *inputDictionary){
     return encryptionDictionary;
 }
 
+void encryptString(char *inputString, char *inputDictionary, char *encryptionDictionary){
+    char *c;
+
+    for(int i = 0 ; i < strlen(inputString) ; i++){
+        if(inputString[i] != ' '){ // we just want to ignore the spaces
+            c = strchr(inputDictionary, inputString[i]); // get a pointer to the current character in the encryptionDictionary
+            inputString[i] = encryptionDictionary[(int)(c - inputDictionary)]; // c - inputDictionary finds the index of the character
+        }
+    }
+}
+
+void writeToFile(char *inputString){
+    FILE *fp;
+
+    fp = fopen("ciphertext.txt", "w+");
+    fputs(inputString, fp);
+    fclose(fp);
+}
+
 int main(int argc, char **argv){
 
     if(argc < 2){ // too arguments
         printf("Usage: a2encrypt inputString\n");
         return -1;
     }
-
-    // printf("argc = %d\n", argc);
-    //
-    // for(int i = 0 ; i < argc ; i++){
-    //     printf("%s ", argv[i]);
-    // }
-    //
-    // printf("\n\n");
 
     char *inputString = argv[1]; // this assumes command line is as follows: ./a2encrypt "the cat"
     char inputDictionary[strlen(inputString)]; // strlen(inputString) is the max possible length it could be
@@ -48,12 +59,16 @@ int main(int argc, char **argv){
         }
     }
 
-    printf("inputString = %s\n", inputString);
-    printf("inputDictionary = %s\n", inputDictionary);
-
+    // create the encryption dictionary
     char *encryptionDictionary = shuffleDictionary(inputDictionary);
 
-    printf("encryptionDictionary = %s\n", encryptionDictionary);
+    //printf("encryptionDictionary = %s\n", encryptionDictionary);
+
+    // encrypt the string
+    encryptString(inputString, inputDictionary, encryptionDictionary);
+
+    // write to ciphertext.txt
+    writeToFile(inputString);
 
     free(encryptionDictionary);
 
