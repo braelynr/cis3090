@@ -7,7 +7,7 @@ encrypt: a2encrypt.c
 	$(CC) $(CFLAGS) a2encrypt.c -o a2encrypt
 
 decrypt: a2decrypt.c
-	$(CC) $(CFLAGS) a2decrypt.c -o a2decrypt
+	mpicc $(CFLAGS) a2decrypt.c -o a2decrypt
 
 clean:
 	rm a2encrypt a2decrypt ciphertext.txt

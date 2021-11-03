@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mpi.h>
 
 void readFile(char *inputString){
   FILE *fp;
@@ -24,6 +25,28 @@ void decrypt(char *decryptionDictionary, char *letterList, char *inputString, ch
   }
 }
 
+void swap(char *a, char *b){
+  char temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
+// permuteString function modified from https://www.geeksforgeeks.org/write-a-c-program-to-print-all-permutations-of-a-given-string/
+void permuteString(char *string, int index, int length, char firstLetter){
+  int i;
+  if (index == length)
+      printf("%c%s\n", firstLetter, string); // i think i want to skip the first character for permutating?
+  else
+  {
+      for (i = index; i <= length; i++)
+      {
+          swap((string+index), (string+i));
+          permuteString(string, index+1, length, firstLetter);
+          swap((string+index), (string+i)); //backtrack
+      }
+  }
+}
+
 int main(int argc, char **argv){
   char *inputString = calloc(30, sizeof(char));
 
@@ -31,7 +54,7 @@ int main(int argc, char **argv){
 
   char letterList[strlen(inputString)]; // strlen(inputString) is the max possible length it could be
   char decryptedString[strlen(inputString)];
-  char decryptionDictionary[strlen(inputString)];
+  //char decryptionDictionary[strlen(inputString)];
 
   memset(letterList, '\0', strlen(inputString)); // initialize input dictionary
   memset(decryptedString, '\0', strlen(inputString)); // initialize input dictionary
@@ -51,6 +74,8 @@ int main(int argc, char **argv){
   decrypt(decryptionDictionary, letterList, inputString, decryptedString);
   printf("decryptedString = %s\n", decryptedString);
 */
+  permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, 'x');
+  // the x will need to be replaced with the first letter of each string... and letter list will need to be rearanged for each thread
 
 
   free(inputString);
