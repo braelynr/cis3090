@@ -42,12 +42,12 @@ void writeToFile(char *inputString){
 
 int main(int argc, char **argv){
 
-    if(argc < 2){ // too arguments
+    if(argc != 2){ // too arguments
         printf("Usage: a2encrypt inputString\n");
         return -1;
     }
 
-    char *inputString = argv[1]; // this assumes command line is as follows: ./a2encrypt "the cat"
+    char *inputString = argv[1];
     char inputDictionary[strlen(inputString)]; // strlen(inputString) is the max possible length it could be
 
     memset(inputDictionary, '\0', strlen(inputString)); // initialize input dictionary
