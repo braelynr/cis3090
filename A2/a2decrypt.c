@@ -54,7 +54,7 @@ int main(int argc, char **argv){
 
   char letterList[strlen(inputString)]; // strlen(inputString) is the max possible length it could be
   char decryptedString[strlen(inputString)];
-  //char decryptionDictionary[strlen(inputString)];
+  char decryptionDictionary[strlen(inputString)];  /* String storing decryptionDictionary of each process */
 
   memset(letterList, '\0', strlen(inputString)); // initialize input dictionary
   memset(decryptedString, '\0', strlen(inputString)); // initialize input dictionary
@@ -66,16 +66,35 @@ int main(int argc, char **argv){
       }
   }
 
-  /* to test decrypt function
-  printf("inputString = %s\n", inputString);
-  printf("letterList = %s\n", letterList);
-  strcpy(decryptionDictionary, "theca");
-  printf("decryptionDictionary = %s\n", decryptionDictionary);
-  decrypt(decryptionDictionary, letterList, inputString, decryptedString);
-  printf("decryptedString = %s\n", decryptedString);
-*/
-  permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, 'x');
-  // the x will need to be replaced with the first letter of each string... and letter list will need to be rearanged for each thread
+  int comm_sz; /* Number of processes    */
+  int my_rank; /* My process rank        */
+
+  /* Start up MPI */
+  MPI_Init(NULL, NULL);
+
+  /* Get the number of processes */
+  MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+
+  /* Get my rank among all the processes */
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  if (my_rank != 0) { // other processes
+    MPI_Recv(letterList, strlen(inputString), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, letterList[0]);
+  } else { // main process
+    // I need to send each starting decryptionDictionary
+    for(int i = 1 ; i < comm_sz ; i++){ // assumes the number of processes is the same as the number of unique characters
+      swap(&letterList[0],&letterList[i]);
+      MPI_Send(letterList, strlen(letterList)+1, MPI_CHAR, i, 0, MPI_COMM_WORLD);
+      swap(&letterList[0],&letterList[i]);
+    }
+    //this process will handle the original (non swapped) letterList permutations
+    permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, letterList[0]);
+  }
+
+  /* Shut down MPI */
+  MPI_Finalize();
+
 
 
   free(inputString);
