@@ -31,20 +31,34 @@ void swap(char *a, char *b){
   *b = temp;
 }
 
+void evalutateDecryption(char *decryptedString){
+  // check the results against the dictionary
+}
+
 // permuteString function modified from https://www.geeksforgeeks.org/write-a-c-program-to-print-all-permutations-of-a-given-string/
-void permuteString(char *string, int index, int length, char firstLetter){
-  int i;
-  if (index == length)
-      printf("%c%s\n", firstLetter, string); // i think i want to skip the first character for permutating?
-  else
-  {
-      for (i = index; i <= length; i++)
-      {
-          swap((string+index), (string+i));
-          permuteString(string, index+1, length, firstLetter);
-          swap((string+index), (string+i)); //backtrack
-      }
-  }
+void permuteString(char *string, int index, int length, char firstLetter, char *letterList, char *inputString){
+    int i;
+    if (index == length){
+        char decryptedString[strlen(inputString)];
+        char decryptionDictionary[strlen(inputString)];  /* String storing decryptionDictionary of each process */
+        memset(decryptedString, '\0', strlen(inputString));
+        memset(decryptionDictionary, '\0', strlen(inputString));
+        strncat(decryptionDictionary, &firstLetter, 1);
+        strcat(decryptionDictionary, string);
+
+        decrypt(decryptionDictionary, letterList, inputString, decryptedString);
+
+        evalutateDecryption(decryptedString);
+    }
+    else
+    {
+        for (i = index; i <= length; i++)
+        {
+            swap((string+index), (string+i));
+            permuteString(string, index+1, length, firstLetter, letterList, inputString);
+            swap((string+index), (string+i)); //backtrack
+        }
+    }
 }
 
 int main(int argc, char **argv){
@@ -53,11 +67,8 @@ int main(int argc, char **argv){
   readFile(inputString);
 
   char letterList[strlen(inputString)]; // strlen(inputString) is the max possible length it could be
-  char decryptedString[strlen(inputString)];
-  char decryptionDictionary[strlen(inputString)];  /* String storing decryptionDictionary of each process */
-
   memset(letterList, '\0', strlen(inputString)); // initialize input dictionary
-  memset(decryptedString, '\0', strlen(inputString)); // initialize input dictionary
+
 
   for(int i = 0 ; i < strlen(inputString) ; i++){
 
@@ -65,6 +76,9 @@ int main(int argc, char **argv){
           strncat(letterList, &inputString[i], 1);
       }
   }
+
+  char *originalPermutation = calloc(strlen(letterList), sizeof(char));
+  strcpy(originalPermutation, letterList);
 
   int comm_sz; /* Number of processes    */
   int my_rank; /* My process rank        */
@@ -80,7 +94,7 @@ int main(int argc, char **argv){
 
   if (my_rank != 0) { // other processes
     MPI_Recv(letterList, strlen(inputString), MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, letterList[0]);
+    permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, letterList[0], originalPermutation, inputString);
   } else { // main process
     // I need to send each starting decryptionDictionary
     for(int i = 1 ; i < comm_sz ; i++){ // assumes the number of processes is the same as the number of unique characters
@@ -89,15 +103,16 @@ int main(int argc, char **argv){
       swap(&letterList[0],&letterList[i]);
     }
     //this process will handle the original (non swapped) letterList permutations
-    permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, letterList[0]);
+    permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, letterList[0], originalPermutation, inputString);
   }
+
+  free(originalPermutation);
+  free(inputString);
 
   /* Shut down MPI */
   MPI_Finalize();
 
 
-
-  free(inputString);
 
   return 0;
 }
