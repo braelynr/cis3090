@@ -1,3 +1,8 @@
+// CIS*3090 A2
+// Braelyn Rotman
+// 1006740
+// November 5th, 2021
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
