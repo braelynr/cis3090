@@ -18,4 +18,6 @@ run `./a2encrypt inputString`
 run `mpiexec -n numProcesses ./a2decrypt`
 
 # Assumptions
-* numProcesses must be equal to the number of unique characters in inputString
+* numProcesses must be equal to the number of unique characters in inputString (not including spaces)
+* inputString must be under 50 characters including spaces
+* Encrypt must be run before Decrypt

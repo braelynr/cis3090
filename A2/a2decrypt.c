@@ -7,10 +7,11 @@ void readFile(char *inputString){
   FILE *fp;
 
   fp = fopen("ciphertext.txt", "r");
-  fgets(inputString, 30, fp);
+  fgets(inputString, 50, fp);
   fclose(fp);
 }
 
+// decrypt the string using the decryptionDictionary
 void decrypt(char *decryptionDictionary, char *letterList, char *inputString, char *decryptedString){
     char *c;
 
@@ -37,7 +38,7 @@ void evalutateDecryption(char *decryptedString){
     int valid = 1; // 1 = valid, 0 = invalid
     char c[2] = " "; // word delimiter
     char command[100];
-    char tokenizeMe[30];
+    char tokenizeMe[50];
     strcpy(tokenizeMe, decryptedString); // because strtok modifies the original string
 
     char *token = strtok(tokenizeMe, c);
@@ -65,10 +66,10 @@ void evalutateDecryption(char *decryptedString){
 void permuteString(char *string, int index, int length, char firstLetter, char *letterList, char *inputString){
     int i;
     if (index == length){
-        char decryptedString[30];
-        char decryptionDictionary[30];  /* String storing decryptionDictionary of each process */
-        memset(decryptedString, '\0', 30);
-        memset(decryptionDictionary, '\0', 30);
+        char decryptedString[50];
+        char decryptionDictionary[50];  /* String storing decryptionDictionary of each process */
+        memset(decryptedString, '\0', 50);
+        memset(decryptionDictionary, '\0', 50);
         strncat(decryptionDictionary, &firstLetter, 1);
         strcat(decryptionDictionary, string);
 
@@ -90,9 +91,9 @@ void permuteString(char *string, int index, int length, char firstLetter, char *
 
 int main(int argc, char **argv){
 
-  char inputString[30];
-  char originalPermutation[30];
-  char letterList[30];
+  char inputString[50];
+  char originalPermutation[50];
+  char letterList[50];
   int comm_sz; /* Number of processes    */
   int my_rank; /* My process rank        */
 
@@ -106,14 +107,14 @@ int main(int argc, char **argv){
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
   if (my_rank != 0) { // other processes
-    MPI_Recv(inputString, 30, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(originalPermutation, 30, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    MPI_Recv(letterList, 30, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(inputString, 50, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(originalPermutation, 50, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(letterList, 50, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     permuteString(letterList + 1, 0, strlen(letterList + 1) - 1, letterList[0], originalPermutation, inputString);
   } else { // main process
     readFile(inputString);
 
-    memset(letterList, '\0', 30); // initialize input dictionary
+    memset(letterList, '\0', 50); // initialize input dictionary
 
 
     for(int i = 0 ; i < strlen(inputString) ; i++){
@@ -125,14 +126,14 @@ int main(int argc, char **argv){
     strcpy(originalPermutation, letterList);
 
     for(int i = 1 ; i < comm_sz ; i++){
-      MPI_Send(inputString, 30, MPI_CHAR, i, 0, MPI_COMM_WORLD);
-      MPI_Send(originalPermutation, 30, MPI_CHAR, i, 0, MPI_COMM_WORLD);
+      MPI_Send(inputString, 50, MPI_CHAR, i, 0, MPI_COMM_WORLD);
+      MPI_Send(originalPermutation, 50, MPI_CHAR, i, 0, MPI_COMM_WORLD);
     }
 
     // I need to send each starting decryptionDictionary
     for(int i = 1 ; i < comm_sz ; i++){ // assumes the number of processes is the same as the number of unique characters
       swap(&letterList[0],&letterList[i]);
-      MPI_Send(letterList, 30, MPI_CHAR, i, 0, MPI_COMM_WORLD);
+      MPI_Send(letterList, 50, MPI_CHAR, i, 0, MPI_COMM_WORLD);
       swap(&letterList[0],&letterList[i]);
     }
     //this process will handle the original (non swapped) letterList permutations
