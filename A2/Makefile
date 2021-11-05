@@ -10,4 +10,4 @@ decrypt: a2decrypt.c
 	mpicc $(CFLAGS) a2decrypt.c -o a2decrypt
 
 clean:
-	rm a2encrypt a2decrypt ciphertext.txt
+	rm a2encrypt a2decrypt ciphertext.txt grepOutput
