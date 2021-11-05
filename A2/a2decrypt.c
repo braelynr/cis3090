@@ -45,9 +45,9 @@ void evalutateDecryption(char *decryptedString){
     /* walk through other tokens */
     while( token != NULL ) {
         memset(command, '\0', 100);
-        strcat(command, "grep '^");
+        strcat(command, "grep \"^");
         strcat(command, token);
-        strcat(command, "$' /usr/share/dict/words > grepOutput");
+        strcat(command, "$\" /usr/share/dict/words > grepOutput");
         if(system(command) != 0){ // grep returns 0 if word is found
           valid = 0;
           break;
@@ -65,14 +65,15 @@ void evalutateDecryption(char *decryptedString){
 void permuteString(char *string, int index, int length, char firstLetter, char *letterList, char *inputString){
     int i;
     if (index == length){
-        char decryptedString[strlen(inputString)];
-        char decryptionDictionary[strlen(inputString)];  /* String storing decryptionDictionary of each process */
-        memset(decryptedString, '\0', strlen(inputString));
-        memset(decryptionDictionary, '\0', strlen(inputString));
+        char decryptedString[30];
+        char decryptionDictionary[30];  /* String storing decryptionDictionary of each process */
+        memset(decryptedString, '\0', 30);
+        memset(decryptionDictionary, '\0', 30);
         strncat(decryptionDictionary, &firstLetter, 1);
         strcat(decryptionDictionary, string);
 
         decrypt(decryptionDictionary, letterList, inputString, decryptedString);
+      //  printf("decryptionDictionary=%s\nletterList=%s\ninputString=%s\ndecryptedString=%s\n\n", decryptionDictionary, letterList, inputString, decryptedString);
 
         evalutateDecryption(decryptedString);
     }
