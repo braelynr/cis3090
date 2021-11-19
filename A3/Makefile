@@ -1,10 +1,10 @@
 CC = gcc
 CFLAGS = -Wall -std=c11 -g
 
-all: serial
+all: serial parallel
 
 serial: maze.c
-	$(CC) $(CFLAGS) maze.c -o maze
+	$(CC) $(CFLAGS) -fopenmp -o maze maze.c
 
 parallel: maze.c
 		$(CC) $(CFLAGS) -fopenmp -o mazep maze.c

@@ -157,7 +157,7 @@ Cell* popOffFront(List * list){
 ///////////////////// END OF LINKED LIST FUNCTIONS //////////////////
 
 // visit neighbours in a random order
-void visitNeightbours(char **maze, Cell *current, List *toVisit, int size){
+void visitNeightbours(char **maze, Cell *current, List *toVisit, int size, char rank){
   int visitOrder[] = {1, 2, 3, 4}; // 1 = Up, 2 = Right, 3 = Down, 4 = Left
   // randomize order
   for(int i = 0 ; i < 4 ; i++){
@@ -173,8 +173,8 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size){
     if(visitOrder[i] == 1){ // up
       if(current->y - 2 > 0){ // check if in bounds
         if(maze[current->x][current->y - 2] == '.'){
-          maze[current->x][current->y - 2] = '0'; // use thread num
-          maze[current->x][current->y - 1] = '0';
+          maze[current->x][current->y - 2] = rank;
+          maze[current->x][current->y - 1] = rank;
           Cell *neighbour = malloc(sizeof(Cell));
           neighbour->x = current->x;
           neighbour->y = current->y - 2;
@@ -185,8 +185,8 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size){
     else if(visitOrder[i] == 2){ // right
       if(current->x + 2 < size){ // check if in bounds
         if(maze[current->x + 2][current->y] == '.'){
-          maze[current->x + 2][current->y] = '0'; // use thread num
-          maze[current->x + 1][current->y] = '0';
+          maze[current->x + 2][current->y] = rank;
+          maze[current->x + 1][current->y] = rank;
           Cell *neighbour = malloc(sizeof(Cell));
           neighbour->x = current->x + 2;
           neighbour->y = current->y;
@@ -197,8 +197,8 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size){
     else if(visitOrder[i] == 3){ // down
       if(current->y + 2 < size){ // check if in bounds
         if(maze[current->x ][current->y + 2] == '.'){
-          maze[current->x][current->y + 2] = '0'; // use thread num
-          maze[current->x][current->y + 1] = '0';
+          maze[current->x][current->y + 2] = rank;
+          maze[current->x][current->y + 1] = rank;
           Cell *neighbour = malloc(sizeof(Cell));
           neighbour->x = current->x;
           neighbour->y = current->y + 2;
@@ -209,8 +209,8 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size){
     else{ // left
       if(current->x - 2 > 0){ // check if in bounds
         if(maze[current->x - 2][current->y] == '.'){
-          maze[current->x - 2][current->y] = '0'; // use thread num
-          maze[current->x - 1][current->y] = '0';
+          maze[current->x - 2][current->y] = rank;
+          maze[current->x - 1][current->y] = rank;
           Cell *neighbour = malloc(sizeof(Cell));
           neighbour->x = current->x - 2;
           neighbour->y = current->y;
@@ -221,11 +221,11 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size){
   }
 }
 
-void generateMaze(Cell *start, char **maze, int size){
+void generateMaze(Cell *start, char **maze, int size, char rank){
   List *toVisit = initializeList();
   Cell *visiting = start;
   do{
-    visitNeightbours(maze, visiting, toVisit, size);
+    visitNeightbours(maze, visiting, toVisit, size, rank);
     free(visiting);
     visiting = popOffFront(toVisit);
   }while(visiting != NULL);
@@ -242,19 +242,48 @@ void printMaze(char **maze, int size){
   }
 }
 
+void runParallel(char **maze, int size){
+  char rank = omp_get_thread_num() + '0';
+
+  printf("rank = %c\n", rank);
+  Cell *starting = malloc(sizeof(Cell));
+
+  switch(rank){
+    case '0': // top left
+      starting->x = 1;
+      starting->y = 1;
+      maze[1][1] = '0';
+      break;
+    case '1': // top right
+      starting->x = size - 2;
+      starting->y = 1;
+      maze[size - 2][1] = '1';
+      break;
+    case '2': // bottom left
+      starting->x = 1;
+      starting->y = size - 2;
+      maze[1][size -2] = '2';
+      break;
+    case '3': // bottom right
+      starting->x = size - 2;
+      starting->y = size - 2;
+      maze[size - 2][size - 2] = '3';
+      break;
+    default:
+      printf("Error\n");
+      break;
+  }
+
+  generateMaze(starting, maze, size, rank);
+
+}
+
 int main(int argc, char **argv){
   int size = 0;
 
   if(argc < 3 || argc == 4 || argc > 5){
     printf("Usage: %s -n size [-s seed]\n", argv[0]);
     return -1;
-  }
-
-  if(strcmp(argv[0], "maze") == 0){ // serial program
-
-  }
-  else{ // parallel program
-
   }
 
   if (argc == 3){ // no seed specified
@@ -289,14 +318,22 @@ int main(int argc, char **argv){
     }
   }
 
-  Cell *starting = malloc(sizeof(Cell));
-  starting->x = 1;
-  starting->y = 1;
-  maze[1][1] = '0'; //use thread count
+  if(strcmp(argv[0], "./maze") == 0){ // serial program
+    Cell *starting = malloc(sizeof(Cell));
+    starting->x = 1;
+    starting->y = 1;
+    maze[1][1] = '0';
 
-  generateMaze(starting, maze, size);
+    generateMaze(starting, maze, size, '0');
+  }
+  else{ // parallel program
+#pragma omp parallel num_threads(4)
+    runParallel(maze, size);
+  }
+
   printMaze(maze, size);
 
+  // free maze memory
   for (int i = 0 ; i < size ; i++){
       free(maze[i]);
   }
