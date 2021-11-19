@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
 
 typedef struct cell{
   int x;
@@ -228,6 +229,8 @@ void generateMaze(Cell *start, char **maze, int size){
     free(visiting);
     visiting = popOffFront(toVisit);
   }while(visiting != NULL);
+
+  freeList(toVisit);
 }
 
 void printMaze(char **maze, int size){
@@ -242,6 +245,18 @@ void printMaze(char **maze, int size){
 int main(int argc, char **argv){
   int size = 0;
 
+  if(argc < 3 || argc == 4 || argc > 5){
+    printf("Usage: %s -n size [-s seed]\n", argv[0]);
+    return -1;
+  }
+
+  if(strcmp(argv[0], "maze") == 0){ // serial program
+
+  }
+  else{ // parallel program
+
+  }
+
   if (argc == 3){ // no seed specified
     srand(0);
     size = atoi(argv[2]);
@@ -253,6 +268,12 @@ int main(int argc, char **argv){
   else if(strcmp(argv[3], "-s") == 0){ // second optional arguement is seed
     srand(atoi(argv[4]));
     size = atoi(argv[2]);
+  }
+
+  if(size < 3){
+    printf("Error: size must be an integer greater than or equal to 3\n");
+    printf("Usage: %s -n size [-s seed]\n", argv[0]);
+    return -1;
   }
 
   char **maze;
@@ -275,6 +296,11 @@ int main(int argc, char **argv){
 
   generateMaze(starting, maze, size);
   printMaze(maze, size);
+
+  for (int i = 0 ; i < size ; i++){
+      free(maze[i]);
+  }
+  free(maze);
 
   return 0;
 }
