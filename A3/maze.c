@@ -2,45 +2,45 @@
 #include <stdlib.h>
 #include <string.h>
 
-// LINKED LIST FUNCTIONED FROM CIS2750 //
+typedef struct cell{
+  int x;
+  int y;
+} Cell;
+
+// LINKED LIST FUNCTIONS FROM CIS2750 //
+
+/**
+ * Node of a linked list. This list is doubly linked, meaning that it has points to both the node immediately in front
+ * of it, as well as the node immediately behind it.
+ **/
+typedef struct listNode{
+    Cell* cell;
+    struct listNode* previous;
+    struct listNode* next;
+} Node;
+
+/**
+ * Metadata head of the list.
+ * Contains no actual data but contains
+ * information about the list (head and tail) as well as the function pointers
+ * for working with the abstracted list data.
+ **/
+typedef struct listHead{
+    Node* head;
+    Node* tail;
+} List;
 
 /** Function to initialize the list metadata head to the appropriate function pointers. Allocates memory to the struct.
 *@return pointer to the list head
-*@param printFunction function pointer to print a single node of the list
-*@param deleteFunction function pointer to delete a single piece of data from the list
-*@param compareFunction function pointer to compare two nodes of the list in order to test for equality or order
 **/
-List * initializeList(char* (*printFunction)(void* toBePrinted),void (*deleteFunction)(void* toBeDeleted),int (*compareFunction)(const void* first,const void* second)){
-    //Asserts create a partial function...
-    assert(printFunction != NULL);
-    assert(deleteFunction != NULL);
-    assert(compareFunction != NULL);
+List * initializeList(){
 
-    List * tmpList = malloc(sizeof(List));
+  List * tmpList = malloc(sizeof(List));
 
 	tmpList->head = NULL;
 	tmpList->tail = NULL;
 
-	tmpList->length = 0;
-
-	tmpList->deleteData = deleteFunction;
-	tmpList->compare = compareFunction;
-	tmpList->printData = printFunction;
-
 	return tmpList;
-}
-
-
-/** Deletes the entire linked list, freeing all memory.
-* uses the supplied function pointer to release allocated memory for the data
-*@pre 'List' type must exist and be used in order to keep track of the linked list.
-*@param list pointer to the List-type dummy node
-*@return  on success: NULL, on failure: head of list
-**/
-void freeList(List* list){
-
-    clearList(list);
-	free(list);
 }
 
 /** Clears the list: frees the contents of the list - Node structs and data stored in them -
@@ -63,7 +63,7 @@ void clearList(List* list){
 	Node* tmp;
 
 	while (list->head != NULL){
-		list->deleteData(list->head->data);
+		free(list->head->cell);
 		tmp = list->head;
 		list->head = list->head->next;
 		free(tmp);
@@ -71,7 +71,18 @@ void clearList(List* list){
 
 	list->head = NULL;
 	list->tail = NULL;
-	list->length = 0;
+}
+
+/** Deletes the entire linked list, freeing all memory.
+* uses the supplied function pointer to release allocated memory for the data
+*@pre 'List' type must exist and be used in order to keep track of the linked list.
+*@param list pointer to the List-type dummy node
+*@return  on success: NULL, on failure: head of list
+**/
+void freeList(List* list){
+
+  clearList(list);
+	free(list);
 }
 
 /**Function for creating a node for the linked list.
@@ -83,14 +94,14 @@ void clearList(List* list){
 * @return On success returns a node that can be added to a linked list. On failure, returns NULL.
 * @param data - is a void * pointer to any data type.  Data must be allocated on the heap.
 **/
-Node* initializeNode(void* data){
+Node* initializeNode(Cell* data){
 	Node* tmpNode = (Node*)malloc(sizeof(Node));
 
 	if (tmpNode == NULL){
 		return NULL;
 	}
 
-	tmpNode->data = data;
+	tmpNode->cell = data;
 	tmpNode->previous = NULL;
 	tmpNode->next = NULL;
 
@@ -103,22 +114,21 @@ Node* initializeNode(void* data){
 *@param list pointer to the dummy head of the list
 *@param toBeAdded a pointer to data that is to be added to the linked list
 **/
-void insertFront(List* list, void* toBeAdded){
+void insertFront(List* list, Cell* toBeAdded){
 	if (list == NULL || toBeAdded == NULL){
 		return;
 	}
-
-	(list->length)++;
 
 	Node* newNode = initializeNode(toBeAdded);
 
     if (list->head == NULL && list->tail == NULL){
         list->head = newNode;
         list->tail = list->head;
-    }else{
-		newNode->next = list->head;
+    }
+    else{
+		    newNode->next = list->head;
         list->head->previous = newNode;
-    	list->head = newNode;
+    	  list->head = newNode;
     }
 }
 
@@ -127,121 +137,87 @@ void insertFront(List* list, void* toBeAdded){
  *@param the list struct
  *@return pointer to the data located at the head of the list
  **/
-void* getFromFront(List * list){
+Cell* popOffFront(List * list){
 	if (list->head == NULL){
 		return NULL;
 	}
 
-	return list->head->data;
+  Node* tmp;
+  Cell *data;
+
+  tmp = list->head;
+  list->head = list->head->next;
+  data = tmp->cell;
+  free(tmp);
+
+	return data;
 }
 
+///////////////////// END OF LINKED LIST FUNCTIONS //////////////////
 
-void* deleteDataFromList(List* list, void* toBeDeleted){
-	if (list == NULL || toBeDeleted == NULL){
-		return NULL;
-	}
+// visit neighbours in a random order
+void visitNeightbours(char **maze, Cell *current, List *toVisit, int size){
+  int visitOrder[] = {1, 2, 3, 4}; // 1 = Up, 2 = Right, 3 = Down, 4 = Left
+  // randomize order
+  for(int i = 0 ; i < 4 ; i++){
+      int randNum = rand() % 4;
+      int temp = visitOrder[i];
+      visitOrder[i] = visitOrder[randNum];
+      visitOrder[randNum] = temp;
+  }
 
-	Node* tmp = list->head;
-
-	while(tmp != NULL){
-		if (list->compare(toBeDeleted, tmp->data) == 0){
-			//Unlink the node
-			Node* delNode = tmp;
-
-			if (tmp->previous != NULL){
-				tmp->previous->next = delNode->next;
-			}else{
-				list->head = delNode->next;
-			}
-
-			if (tmp->next != NULL){
-				tmp->next->previous = delNode->previous;
-			}else{
-				list->tail = delNode->previous;
-			}
-
-			void* data = delNode->data;
-			free(delNode);
-
-			(list->length)--;
-
-			return data;
-
-		}else{
-			tmp = tmp->next;
-		}
-	}
-
-	return NULL;
-}
-
-/**Returns a string that contains a string representation of the list traversed from  head to tail.
-Utilize an iterator and the list's printData function pointer to create the string.
-returned string must be freed by the calling function.
- *@pre List must exist, but does not have to have elements.
- *@param list Pointer to linked list dummy head.
- *@return on success: char * to string representation of list (must be freed after use).  on failure: NULL
- **/
-char* toString(List * list){
-	ListIterator iter = createIterator(list);
-	char* str;
-
-	str = (char*)malloc(sizeof(char));
-	strcpy(str, "");
-
-	void* elem;
-	while((elem = nextElement(&iter)) != NULL){
-		char* currDescr = list->printData(elem);
-		int newLen = strlen(str)+50+strlen(currDescr);
-		str = (char*)realloc(str, newLen);
-		strcat(str, "\n");
-		strcat(str, currDescr);
-
-		free(currDescr);
-	}
-
-	return str;
-}
-
-ListIterator createIterator(List* list){
-    ListIterator iter;
-
-    iter.current = list->head;
-
-    return iter;
-}
-
-void* nextElement(ListIterator* iter){
-    Node* tmp = iter->current;
-
-    if (tmp != NULL){
-        iter->current = iter->current->next;
-        return tmp->data;
-    }else{
-        return NULL;
+  // visit each one
+  for(int i = 0 ; i < 4; i++){
+    // critical i  think
+    if(visitOrder[i] == 1){ // up
+      if(current->y - 2 > 0){ // check if in bounds
+        if(maze[current->x][current->y - 2] == '.'){
+          maze[current->x][current->y - 2] == '0'; // use thread num
+          maze[current->x][current->y - 1] == '0';
+          Cell *neighbour = malloc(sizeof(Cell));
+          neighbour->x = current->x;
+          neighbour->y = current->y - 2;
+          insertFront(toVisit, (void *)(neighbour));
+        }
+      }
     }
-}
-
-int getLength(List* list){
-	return list->length;
-}
-
-void* findElement(List * list, bool (*customCompare)(const void* first,const void* second), const void* searchRecord){
-	if (customCompare == NULL)
-		return NULL;
-
-	ListIterator itr = createIterator(list);
-
-	void* data = nextElement(&itr);
-	while (data != NULL)
-	{
-		if (customCompare(data, searchRecord))
-			return data;
-
-		data = nextElement(&itr);
-	}
-
-	return NULL;
+    else if(visitOrder[i] == 2){ // right
+      if(current->x + 2 < size){ // check if in bounds
+        if(maze[current->x + 2][current->y] == '.'){
+          maze[current->x + 2][current->y] == '0'; // use thread num
+          maze[current->x + 1][current->y] == '0';
+          Cell *neighbour = malloc(sizeof(Cell));
+          neighbour->x = current->x + 2;
+          neighbour->y = current->y;
+          insertFront(toVisit, (void *)(neighbour));
+        }
+      }
+    }
+    else if(visitOrder[i] == 3){ // down
+      if(current->y + 2 < size){ // check if in bounds
+        if(maze[current->x ][current->y + 2] == '.'){
+          maze[current->x][current->y + 2] == '0'; // use thread num
+          maze[current->x][current->y + 1] == '0';
+          Cell *neighbour = malloc(sizeof(Cell));
+          neighbour->x = current->x;
+          neighbour->y = current->y + 2;
+          insertFront(toVisit, (void *)(neighbour));
+        }
+      }
+    }
+    else{ // left
+      if(current->x - 2 > 0){ // check if in bounds
+        if(maze[current->x - 2][current->y] == '.'){
+          maze[current->x - 2][current->y] == '0'; // use thread num
+          maze[current->x - 1][current->y] == '0';
+          Cell *neighbour = malloc(sizeof(Cell));
+          neighbour->x = current->x - 2;
+          neighbour->y = current->y;
+          insertFront(toVisit, (void *)(neighbour));
+        }
+      }
+    }
+  }
 }
 
 int main(int argc, char **argv){
@@ -258,6 +234,15 @@ int main(int argc, char **argv){
   else if(strcmp(argv[3], "-s") == 0){ // second optional arguement is seed
     srand(atoi(argv[4]));
     size = atoi(argv[2]);
+  }
+
+  char maze[size][size];
+
+  //initialize maze;
+  for (int i = 0 ; i < size ; i++){
+    for (int j = 0 ; j < size ; j++){
+      maze[i][j] = '.';
+    }
   }
 
   return 0;
