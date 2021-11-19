@@ -169,52 +169,54 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size, char 
 
   // visit each one
   for(int i = 0 ; i < 4; i++){
-    // critical i  think
-    if(visitOrder[i] == 1){ // up
-      if(current->y - 2 > 0){ // check if in bounds
-        if(maze[current->x][current->y - 2] == '.'){
-          maze[current->x][current->y - 2] = rank;
-          maze[current->x][current->y - 1] = rank;
-          Cell *neighbour = malloc(sizeof(Cell));
-          neighbour->x = current->x;
-          neighbour->y = current->y - 2;
-          insertFront(toVisit, (void *)(neighbour));
+#pragma omp critical
+    {
+      if(visitOrder[i] == 1){ // up
+        if(current->y - 2 > 0){ // check if in bounds
+          if(maze[current->x][current->y - 2] == '.'){
+            maze[current->x][current->y - 2] = rank;
+            maze[current->x][current->y - 1] = rank;
+            Cell *neighbour = malloc(sizeof(Cell));
+            neighbour->x = current->x;
+            neighbour->y = current->y - 2;
+            insertFront(toVisit, (void *)(neighbour));
+          }
         }
       }
-    }
-    else if(visitOrder[i] == 2){ // right
-      if(current->x + 2 < size){ // check if in bounds
-        if(maze[current->x + 2][current->y] == '.'){
-          maze[current->x + 2][current->y] = rank;
-          maze[current->x + 1][current->y] = rank;
-          Cell *neighbour = malloc(sizeof(Cell));
-          neighbour->x = current->x + 2;
-          neighbour->y = current->y;
-          insertFront(toVisit, (void *)(neighbour));
+      else if(visitOrder[i] == 2){ // right
+        if(current->x + 2 < size){ // check if in bounds
+          if(maze[current->x + 2][current->y] == '.'){
+            maze[current->x + 2][current->y] = rank;
+            maze[current->x + 1][current->y] = rank;
+            Cell *neighbour = malloc(sizeof(Cell));
+            neighbour->x = current->x + 2;
+            neighbour->y = current->y;
+            insertFront(toVisit, (void *)(neighbour));
+          }
         }
       }
-    }
-    else if(visitOrder[i] == 3){ // down
-      if(current->y + 2 < size){ // check if in bounds
-        if(maze[current->x ][current->y + 2] == '.'){
-          maze[current->x][current->y + 2] = rank;
-          maze[current->x][current->y + 1] = rank;
-          Cell *neighbour = malloc(sizeof(Cell));
-          neighbour->x = current->x;
-          neighbour->y = current->y + 2;
-          insertFront(toVisit, (void *)(neighbour));
+      else if(visitOrder[i] == 3){ // down
+        if(current->y + 2 < size){ // check if in bounds
+          if(maze[current->x ][current->y + 2] == '.'){
+            maze[current->x][current->y + 2] = rank;
+            maze[current->x][current->y + 1] = rank;
+            Cell *neighbour = malloc(sizeof(Cell));
+            neighbour->x = current->x;
+            neighbour->y = current->y + 2;
+            insertFront(toVisit, (void *)(neighbour));
+          }
         }
       }
-    }
-    else{ // left
-      if(current->x - 2 > 0){ // check if in bounds
-        if(maze[current->x - 2][current->y] == '.'){
-          maze[current->x - 2][current->y] = rank;
-          maze[current->x - 1][current->y] = rank;
-          Cell *neighbour = malloc(sizeof(Cell));
-          neighbour->x = current->x - 2;
-          neighbour->y = current->y;
-          insertFront(toVisit, (void *)(neighbour));
+      else{ // left
+        if(current->x - 2 > 0){ // check if in bounds
+          if(maze[current->x - 2][current->y] == '.'){
+            maze[current->x - 2][current->y] = rank;
+            maze[current->x - 1][current->y] = rank;
+            Cell *neighbour = malloc(sizeof(Cell));
+            neighbour->x = current->x - 2;
+            neighbour->y = current->y;
+            insertFront(toVisit, (void *)(neighbour));
+          }
         }
       }
     }
