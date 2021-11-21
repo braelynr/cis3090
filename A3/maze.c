@@ -223,16 +223,21 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size, char 
   }
 }
 
-void generateMaze(Cell *start, char **maze, int size, char rank){
+int generateMaze(Cell *start, char **maze, int size, char rank){
   List *toVisit = initializeList();
   Cell *visiting = start;
+  int count = -1; // count neighbours claimed (starts at -1 because the last increment is null not a claimed neighbour)
+
   do{
     visitNeightbours(maze, visiting, toVisit, size, rank);
     free(visiting);
     visiting = popOffFront(toVisit);
+    count++;
   }while(visiting != NULL);
 
   freeList(toVisit);
+
+  return count;
 }
 
 void printMaze(char **maze, int size){
@@ -246,37 +251,35 @@ void printMaze(char **maze, int size){
 
 void runParallel(char **maze, int size){
   char rank = omp_get_thread_num() + '0';
+  int count = 0; // count neighbours claimed
 
-  printf("rank = %c\n", rank);
+  //printf("rank = %c\n", rank);
   Cell *starting = malloc(sizeof(Cell));
 
   switch(rank){
     case '0': // top left
       starting->x = 1;
       starting->y = 1;
-      maze[1][1] = '0';
       break;
     case '1': // top right
       starting->x = size - 2;
       starting->y = 1;
-      maze[size - 2][1] = '1';
       break;
     case '2': // bottom left
       starting->x = 1;
       starting->y = size - 2;
-      maze[1][size -2] = '2';
       break;
     case '3': // bottom right
       starting->x = size - 2;
       starting->y = size - 2;
-      maze[size - 2][size - 2] = '3';
       break;
     default:
       printf("Error\n");
       break;
   }
 
-  generateMaze(starting, maze, size, rank);
+  count = generateMaze(starting, maze, size, rank);
+  printf("thread %c count: %d\n", rank, count);
 
 }
 
@@ -301,8 +304,8 @@ int main(int argc, char **argv){
     size = atoi(argv[2]);
   }
 
-  if(size < 3){
-    printf("Error: size must be an integer greater than or equal to 3\n");
+  if(size < 3 || (size % 2 == 0)){
+    printf("Error: size must be an odd integer greater than or equal to 3\n");
     printf("Usage: %s -n size [-s seed]\n", argv[0]);
     return -1;
   }
@@ -330,7 +333,14 @@ int main(int argc, char **argv){
   }
   else{ // parallel program
 #pragma omp parallel num_threads(4)
-    runParallel(maze, size);
+{
+  // initialize starting points in maze
+      maze[1][1] = '0';
+      maze[size - 2][1] = '1';
+      maze[1][size -2] = '2';
+      maze[size - 2][size - 2] = '3';
+      runParallel(maze, size);
+    }
   }
 
   printMaze(maze, size);
