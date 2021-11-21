@@ -1,3 +1,9 @@
+/* Braelyn Rotman
+1006740
+Assignment 3 CIS*3090
+November 19th, 2021 */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
