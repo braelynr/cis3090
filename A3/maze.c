@@ -159,7 +159,7 @@ Cell* popOffFront(List * list){
 // visit neighbours in a random order
 void visitNeightbours(char **maze, Cell *current, List *toVisit, int size, char rank){
   int visitOrder[] = {1, 2, 3, 4}; // 1 = Up, 2 = Right, 3 = Down, 4 = Left
-  // randomize order
+  // randomize order to visit neighbours
   for(int i = 0 ; i < 4 ; i++){
       int randNum = rand() % 4;
       int temp = visitOrder[i];
@@ -169,17 +169,18 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size, char 
 
   // visit each one
   for(int i = 0 ; i < 4; i++){
+    // critical section as threads must not read and write at the same time
 #pragma omp critical
     {
       if(visitOrder[i] == 1){ // up
         if(current->y - 2 > 0){ // check if in bounds
-          if(maze[current->x][current->y - 2] == '.'){
+          if(maze[current->x][current->y - 2] == '.'){ // if not claimed yet
             maze[current->x][current->y - 2] = rank;
             maze[current->x][current->y - 1] = rank;
-            Cell *neighbour = malloc(sizeof(Cell));
+            Cell *neighbour = malloc(sizeof(Cell)); // create cell to add to stack
             neighbour->x = current->x;
             neighbour->y = current->y - 2;
-            insertFront(toVisit, (void *)(neighbour));
+            insertFront(toVisit, (void *)(neighbour)); // add to stack
           }
         }
       }
@@ -223,6 +224,7 @@ void visitNeightbours(char **maze, Cell *current, List *toVisit, int size, char 
   }
 }
 
+// this function gets the next cell and calls the function to visit it's neighbours
 int generateMaze(Cell *start, char **maze, int size, char rank){
   List *toVisit = initializeList();
   Cell *visiting = start;
@@ -231,7 +233,7 @@ int generateMaze(Cell *start, char **maze, int size, char rank){
   do{
     visitNeightbours(maze, visiting, toVisit, size, rank);
     free(visiting);
-    visiting = popOffFront(toVisit);
+    visiting = popOffFront(toVisit); // get the next cell to check neighbours for
     count++;
   }while(visiting != NULL);
 
@@ -249,11 +251,11 @@ void printMaze(char **maze, int size){
   }
 }
 
+// this function simply gives each thread it's starting point before calling the main generation function
 void runParallel(char **maze, int size){
   char rank = omp_get_thread_num() + '0';
   int count = 0; // count neighbours claimed
 
-  //printf("rank = %c\n", rank);
   Cell *starting = malloc(sizeof(Cell));
 
   switch(rank){
@@ -286,6 +288,7 @@ void runParallel(char **maze, int size){
 int main(int argc, char **argv){
   int size = 0;
 
+ // check command line arguments
   if(argc < 3 || argc == 4 || argc > 5){
     printf("Usage: %s -n size [-s seed]\n", argv[0]);
     return -1;
@@ -295,11 +298,11 @@ int main(int argc, char **argv){
     srand(0);
     size = atoi(argv[2]);
   }
-  else if(strcmp(argv[1], "-s") == 0){ // first optional arguement is seed
+  else if(strcmp(argv[1], "-s") == 0){ // first optional argument is seed
     srand(atoi(argv[2]));
     size = atoi(argv[4]);
   }
-  else if(strcmp(argv[3], "-s") == 0){ // second optional arguement is seed
+  else if(strcmp(argv[3], "-s") == 0){ // second optional argument is seed
     srand(atoi(argv[4]));
     size = atoi(argv[2]);
   }
@@ -310,6 +313,7 @@ int main(int argc, char **argv){
     return -1;
   }
 
+  // initialize maze
   char **maze;
   maze = calloc(size, sizeof(char *));
   for (int i = 0 ; i < size ; i++){
@@ -328,7 +332,7 @@ int main(int argc, char **argv){
     starting->x = 1;
     starting->y = 1;
     maze[1][1] = '0';
-
+    // go straight to generate maze
     generateMaze(starting, maze, size, '0');
   }
   else{ // parallel program
@@ -339,6 +343,7 @@ int main(int argc, char **argv){
       maze[size - 2][1] = '1';
       maze[1][size -2] = '2';
       maze[size - 2][size - 2] = '3';
+      // initialize each thread starting point in runParallel()
       runParallel(maze, size);
     }
   }
