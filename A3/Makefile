@@ -7,7 +7,7 @@ serial: maze.c
 	$(CC) $(CFLAGS) -fopenmp -o maze maze.c
 
 parallel: maze.c
-		$(CC) $(CFLAGS) -fopenmp -o mazep maze.c
+	$(CC) $(CFLAGS) -fopenmp -o mazep maze.c
 
 clean:
 	rm maze mazep
