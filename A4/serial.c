@@ -78,7 +78,7 @@ int main(int argc, char **argv){
 
     srand(time(NULL));
 
-    int mid = (int)(size / 2);
+    int mid = (int)((size-1) / 2);
 
     switch(pattern){
         case 0: // random
@@ -89,11 +89,19 @@ int main(int argc, char **argv){
             }
             break;
         case 1: // flipflop
+            if(size < 4){
+                printf("Grid too small for FlipFlop pattern");
+                return -1;
+            }
             grid[0][mid-1] = 'X';
             grid[0][mid+1] = 'X';
             grid[0][mid+2] = 'X';
             break;
         case 2: // spider
+            if(size < 6){
+                printf("Grid too small for Spider pattern");
+                return -1;
+            }
             grid[0][mid-2] = 'X';
             grid[0][mid-1] = 'X';
             grid[0][mid] = 'X';
@@ -102,12 +110,20 @@ int main(int argc, char **argv){
             grid[0][mid+3] = 'X';
             break;
         case 3: // glider
+            if(size < 5){
+                printf("Grid too small for Glider pattern");
+                return -1;
+            }
             grid[0][mid-2] = 'X';
             grid[0][mid] = 'X';
             grid[0][mid+1] = 'X';
             grid[0][mid+2] = 'X';
             break;
         case 4: // face
+            if(size < 7){
+                printf("Grid too small for Face pattern");
+                return -1;
+            }
             grid[0][mid-3] = 'X';
             grid[0][mid-2] = 'X';
             grid[0][mid-1] = 'X';
