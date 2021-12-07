@@ -1,3 +1,7 @@
+// Braelyn Rotman
+// ID: 1006740
+// December 7th, 2021
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
